@@ -12,6 +12,17 @@
 
 ## Global Constraints
 
+**Read these three before writing code. They apply to every task.**
+
+- `CLAUDE.md` — the non-negotiable rules, and why each one exists.
+- `docs/ENGINEERING.md` — TypeScript, file boundaries, tests, errors, naming, commits.
+- `docs/STYLE-GUIDE.md` — prose style for all docs, commit bodies, and comments.
+
+The four that get violated most often, repeated here so they're unmissable:
+pure packages import no platform APIs (pass `now` in, don't call `Date.now()`);
+watch every test fail before implementing it; comment why, never what; no AI
+attribution in commits.
+
 - TypeScript `strict: true` in every package. No `any` without a comment justifying it.
 - `packages/core` and `packages/sanskrit` MUST NOT import from `react`, `react-native`, or `expo`. Enforced by lint rule in Task 1.
 - Expo SDK 54, React Native New Architecture enabled.
