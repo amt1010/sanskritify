@@ -2,6 +2,7 @@ node_modules/
 .expo/
 dist/
 build/
+.turbo/
 *.log
 .env
 .env.local
