@@ -106,6 +106,20 @@ describe('diffAkshara', () => {
     expect(diffAkshara(KSHA, { ...KSHA, sign: 'ं' })).toEqual({ kind: 'sign-differs' });
   });
 
+  // Adding a mistake must never make the verdict more lenient. A wrong sign
+  // is not a near-miss on its own and does not become one when the matra or
+  // halant is also wrong.
+  it.each([
+    ['sign wrong', { matra: 'ा', sign: 'ं', halant: false }],
+    ['sign and matra wrong', { matra: 'ि', sign: 'ं', halant: false }],
+    ['sign and halant wrong', { matra: 'ा', sign: 'ं', halant: true }],
+    ['sign, matra and halant wrong', { matra: 'ि', sign: 'ं', halant: true }],
+  ])('reports sign-differs when the sign is wrong (%s)', (_label, { matra, sign, halant }) => {
+    const expected: Akshara = { parts: [{ consonant: 'क', halant: false }], matra: 'ा', sign: null };
+    const actual: Akshara = { parts: [{ consonant: 'क', halant }], matra, sign };
+    expect(diffAkshara(expected, actual)).toEqual({ kind: 'sign-differs' });
+  });
+
   it('reports consonants-differ when the cluster is wrong', () => {
     const wrong: Akshara = {
       parts: [{ consonant: 'क', halant: true }, { consonant: 'स', halant: false }],

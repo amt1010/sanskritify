@@ -117,15 +117,14 @@ export function diffAkshara(expected: Akshara, actual: Akshara): AksharaDiff {
 
   if (!sameConsonants) return { kind: 'consonants-differ' };
 
-  const sameHalants = expected.parts.every((p, i) => p.halant === actual.parts[i]!.halant);
-  if (sameHalants && expected.matra === actual.matra && expected.sign === actual.sign) {
-    return { kind: 'equal' };
-  }
+  // A sign error is outside the narrow near-miss rule whatever else is wrong,
+  // so it is checked before the matra and halant. Checking it after meant a
+  // wrong sign alone cost a heart while a wrong sign plus a wrong matra earned
+  // a free retry — adding a mistake made the grading more lenient.
+  if (expected.sign !== actual.sign) return { kind: 'sign-differs' };
 
-  // Consonants match, so the difference is a matra, a halant, or a sign.
-  // Matra and halant come first: they are the near-miss cases, and a learner
-  // who got both the cluster and the vowel right but the sign wrong has made
-  // the larger mistake of the two.
-  if (sameHalants && expected.matra === actual.matra) return { kind: 'sign-differs' };
+  const sameHalants = expected.parts.every((p, i) => p.halant === actual.parts[i]!.halant);
+  if (sameHalants && expected.matra === actual.matra) return { kind: 'equal' };
+
   return { kind: 'matra-differs' };
 }
