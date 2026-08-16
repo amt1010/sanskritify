@@ -1,6 +1,9 @@
 export const VIRAMA = '्';
-export const ZWJ = '‍';
-export const ZWNJ = '‌';
+// ZWJ and ZWNJ are \u escapes, not literal characters. A literal
+// zero-width character is invisible in the editor and in git diff, so
+// the line would read as export const ZWJ = ''; to every future reader.
+export const ZWJ = '\u200D';
+export const ZWNJ = '\u200C';
 export const ANUSVARA = 'ं';
 export const AVAGRAHA = 'ऽ';
 export const DANDA = '।';
