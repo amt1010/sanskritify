@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isConsonant, isMatra, isIndependentVowel, isVirama, VIRAMA } from './chars';
+import { isConsonant, isMatra, isIndependentVowel, isSign, isVirama, VIRAMA } from './chars';
 
 describe('isConsonant', () => {
   it.each(['क', 'ख', 'ष', 'ह', 'ळ'])('accepts %s', (ch) => {
@@ -31,4 +31,13 @@ describe('isIndependentVowel', () => {
 describe('isVirama', () => {
   it('accepts the virama', () => expect(isVirama(VIRAMA)).toBe(true));
   it('rejects a consonant', () => expect(isVirama('क')).toBe(false));
+});
+
+describe('isSign', () => {
+  it.each(['ं', 'ः', 'ँ'])('accepts %s', (ch) => {
+    expect(isSign(ch)).toBe(true);
+  });
+  it.each(['क', 'अ', 'ा', '्', 'ऽ'])('rejects %s', (ch) => {
+    expect(isSign(ch)).toBe(false);
+  });
 });

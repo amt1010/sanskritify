@@ -51,3 +51,12 @@ export function isIndependentVowel(ch: string): boolean {
 export function isVirama(ch: string): boolean {
   return ch === VIRAMA;
 }
+
+// Anusvara ं, visarga ः, candrabindu ँ, and the inverted candrabindu. These
+// attach after a matra, not before it, which is why an Akshara keeps them in
+// their own slot rather than treating them as consonant parts.
+const SIGN = /^[ऀ-ः]$/u;
+
+export function isSign(ch: string): boolean {
+  return SIGN.test(ch);
+}
