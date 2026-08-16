@@ -33,6 +33,15 @@ importers:
         specifier: ^3.23.0
         version: 3.25.76
 
+  packages/core:
+    dependencies:
+      '@sanskritify/content':
+        specifier: workspace:*
+        version: link:../content
+      '@sanskritify/sanskrit':
+        specifier: workspace:*
+        version: link:../sanskrit
+
   packages/sanskrit: {}
 
 packages:
