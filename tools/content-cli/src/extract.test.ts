@@ -1,11 +1,29 @@
 import { describe, it, expect } from 'vitest';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { chapterPdfPath, extractChapter } from './extract';
+import { chapterPdfPath, extractChapter, REPO_ROOT as RESOLVED_ROOT } from './extract';
 
-// The repo root, from tools/content-cli/src/.
+// The repo root, from tools/content-cli/src/. Computed independently of the
+// module's own REPO_ROOT so the assertions below are a genuine check rather
+// than comparing a value to itself.
 const REPO_ROOT = path.resolve(__dirname, '../../..');
+
+describe('REPO_ROOT', () => {
+  // Pins the fix for the cwd bug: pnpm/turbo run package scripts with cwd set
+  // to the package directory, so a cwd-based root would resolve Class6/
+  // inside tools/content-cli and miss it. REPO_ROOT must be independent of
+  // cwd, so this test does not touch process.cwd() at all — it only checks
+  // that the module-resolved root points at the real repo.
+  it('resolves to a directory that contains Class6', () => {
+    expect(existsSync(path.join(RESOLVED_ROOT, 'Class6'))).toBe(true);
+  });
+
+  it('lets chapterPdfPath find a chapter 1 PDF that actually exists', () => {
+    expect(existsSync(chapterPdfPath(1, RESOLVED_ROOT))).toBe(true);
+  });
+});
 
 describe('chapterPdfPath', () => {
   it('maps chapter 1 to fsde101.pdf', () => {

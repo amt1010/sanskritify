@@ -1,9 +1,20 @@
 import { execFile } from 'node:child_process';
 import { mkdir, readFile } from 'node:fs/promises';
 import { promisify } from 'node:util';
+import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const run = promisify(execFile);
+
+// The repo root, resolved from this file's own location rather than
+// process.cwd(). pnpm and turbo both run package scripts with cwd set to the
+// package directory (tools/content-cli), so a cwd-based root would read
+// Class6/ from the wrong place. extract fails loudly when that happens, but
+// later commands (build) write files, where a wrong root would not fail
+// loudly — it would silently write output under tools/content-cli/ instead.
+// This file lives at tools/content-cli/src/extract.ts, so the root is three
+// levels up, true no matter where the process was launched from.
+export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 
 export interface ExtractResult {
   chapter: number;
