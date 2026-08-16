@@ -1,5 +1,5 @@
 import type { Akshara } from '@sanskritify/sanskrit';
-import type { Lexeme, LocaleCode } from '@sanskritify/content';
+import type { Exercise, Lexeme, LocaleCode } from '@sanskritify/content';
 
 export type Verdict = 'correct' | 'near-miss' | 'wrong';
 export type HintCode = 'matra-differs' | null;
@@ -17,4 +17,22 @@ export type Answer =
 export interface GradeContext {
   lexemes: Map<string, Lexeme>;
   locale: LocaleCode;
+}
+
+export interface SessionState {
+  lessonId: string;
+  queue: Exercise[];
+  index: number;
+  hearts: number;
+  maxHearts: number;
+  xp: number;
+  wrongCount: number;
+  mistakeCount: number;
+  requeues: Record<string, number>;
+  status: 'in_progress' | 'complete' | 'failed';
+}
+
+export interface SessionOpts {
+  hearts: number;
+  maxHearts: number;
 }
