@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "Sanskritify",
+    "slug": "sanskritify",
+    "scheme": "sanskritify",
+    "newArchEnabled": true,
+    "ios": { "supportsTablet": true, "bundleIdentifier": "app.sanskritify" },
+    "android": { "package": "app.sanskritify" },
+    "plugins": ["expo-router", "expo-font"]
+  }
+}
