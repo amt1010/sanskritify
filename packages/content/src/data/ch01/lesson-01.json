@@ -1,0 +1,33 @@
+{
+  "id": "les.ch01.u1.l1",
+  "unitId": "unit.ch01.u1",
+  "titleTranslations": { "hi": "समानाक्षर स्वर", "en": "Simple vowels" },
+  "exercises": [
+    { "id": "ex.ch01.001", "type": "akshara-select", "target": "अ",
+      "options": ["अ", "आ", "इ", "उ"],
+      "promptTranslations": { "hi": "सबसे पहला स्वर चुनो", "en": "Pick the first vowel of the वर्णमाला" },
+      "conceptId": "con.ch01.svara", "source": "ncert-deepakam-ch01" },
+    { "id": "ex.ch01.002", "type": "akshara-select", "target": "आ",
+      "options": ["अ", "आ", "ई", "ऊ"],
+      "promptTranslations": { "hi": "'अ' का दीर्घ रूप चुनो", "en": "Pick the long form of अ" },
+      "conceptId": "con.ch01.hrasva-dirgha", "source": "ncert-deepakam-ch01" },
+    { "id": "ex.ch01.003", "type": "akshara-select", "target": "इ",
+      "options": ["इ", "ई", "उ", "ऋ"],
+      "promptTranslations": { "hi": "'ई' का ह्रस्व रूप चुनो", "en": "Pick the short form of ई" },
+      "conceptId": "con.ch01.svara", "source": "ncert-deepakam-ch01" },
+    { "id": "ex.ch01.004", "type": "akshara-select", "target": "ऊ",
+      "options": ["उ", "ऊ", "ओ", "औ"],
+      "promptTranslations": { "hi": "'उ' का दीर्घ रूप चुनो", "en": "Pick the long form of उ" },
+      "conceptId": "con.ch01.hrasva-dirgha", "source": "ncert-deepakam-ch01" },
+    { "id": "ex.ch01.005", "type": "akshara-select", "target": "ऋ",
+      "options": ["ऋ", "ऌ", "इ", "उ"],
+      "promptTranslations": { "hi": "'कृषि' शब्द में जो स्वर है, वह चुनो", "en": "Pick the vowel heard in कृषि" },
+      "conceptId": "con.ch01.svara", "source": "ncert-deepakam-ch01" },
+    { "id": "ex.ch01.006", "type": "akshara-build", "target": "कि",
+      "conceptId": "con.ch01.svara", "source": "ncert-deepakam-ch01" },
+    { "id": "ex.ch01.007", "type": "akshara-build", "target": "की",
+      "conceptId": "con.ch01.hrasva-dirgha", "source": "ncert-deepakam-ch01" },
+    { "id": "ex.ch01.008", "type": "akshara-build", "target": "कु",
+      "conceptId": "con.ch01.svara", "source": "ncert-deepakam-ch01" }
+  ]
+}

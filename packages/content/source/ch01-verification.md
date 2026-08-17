@@ -1,0 +1,82 @@
+# Chapter 1 verification worksheet
+
+For the repo owner, with `Class6/fsde101.pdf` open to chapter 1. Nobody has
+done this check yet — everything in `packages/content/src/data/ch01/` is
+still a draft. See `source/ch01.md` for how it was derived.
+
+Work through each item, write down the answer, then see "What to do with
+the answers" at the end.
+
+## 1. The five corrections
+
+For each row, does the PDF actually show the corrected form?
+
+| # | Extracted (`ch01.txt`) | Proposed correction | PDF shows correction? (y/n) | Notes |
+|---|---|---|---|---|
+| 1 | `वर्मण ालां` | `वर्णमालां` | | |
+| 2 | `स्वतन्त्ररूपणे` | `स्वतन्त्ररूपेण` | | |
+| 3 | `सामान्‍याः` | `सामान्याः` | | |
+| 4 | `सन्‍त‍ि` | `सन्ति` | | |
+| 5 | `वरण्मालायाम्` | `वर्णमालायाम्` | | |
+
+## 2. Does chapter 1 teach ॠ?
+
+`ॠ` (दीर्घ ऋ, U+0960) occurs 0 times in the `pdftotext` extraction of
+chapter 1. `con.ch01.hrasva-dirgha` currently teaches only अ/आ, इ/ई, उ/ऊ as
+short/long pairs — it does not mention ऋ or ॠ at all.
+
+- Does the printed chapter mention ॠ anywhere — in the वर्णमाला chart, a
+  footnote, or a table? (y/n)
+- If yes, should the concept body add it as a third short/long pair?
+
+## 3. Does ऌ deserve its own place in the lesson?
+
+`ऌ` appears 18 times in the extraction, `ऋ` only 3 times — ऌ is far more
+present in this chapter's text than ऋ is, which is the opposite of what a
+usual वर्णमाला ordering would suggest.
+
+- Does the chapter present ऌ as a first-class vowel (its own row/box in the
+  vowel chart, not just an incidental use)? (y/n)
+- If yes, should a ninth exercise (or a swap for one of the eight) cover ऌ
+  specifically? Don't add it yourself — write the answer here and it goes in
+  as a follow-up.
+
+## 4. Are the two concept bodies a fair statement of what the chapter says?
+
+Read `con.ch01.svara` and `con.ch01.hrasva-dirgha` in
+`packages/content/src/data/ch01/concepts.json` against the chapter's actual
+explanation.
+
+- `con.ch01.svara`: does the chapter define स्वर the way this body does
+  (pronounced independently, no supporting sound needed)? (y/n)
+- `con.ch01.hrasva-dirgha`: does the chapter state the ह्रस्व/दीर्घ
+  distinction as a difference in vowel length ("held twice as long")? (y/n)
+- Anything the chapter says that these bodies get wrong or leave out?
+
+## 5. Is कृषि the right example word?
+
+`ex.ch01.005`'s prompt asks the learner to pick the vowel heard in `कृषि`.
+
+- Does chapter 1 actually use the word कृषि anywhere? (y/n)
+- If not, what word does the chapter use that contains ऋ, that would make a
+  better example?
+
+## 6. Does the lesson structure match the chapter's own structure?
+
+- Lesson title is `समानाक्षर स्वर` ("simple vowels"). Does the chapter use
+  this term, or a different one, for this group of vowels?
+- The lesson is unit `unit.ch01.u1`, lesson `l1` — a single lesson for the
+  whole simple-vowel set. Does the chapter's own pacing suggest splitting
+  this into more than one lesson, or is one lesson the right size?
+
+## What to do with the answers
+
+For anything marked "n" above, or any note you added:
+
+1. Fix the JSON in `packages/content/src/data/ch01/` directly.
+2. Update `packages/content/source/ch01.md` to describe the correction and
+   why.
+3. Once every item above has been checked against the PDF and the JSON
+   matches what the page says, change this file's and `ch01.md`'s status
+   line from "not been checked against the printed page" to a line stating
+   a human checked it, with the date and who did it.
