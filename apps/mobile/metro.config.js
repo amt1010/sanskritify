@@ -17,9 +17,4 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ];
 
-// pnpm hoists nothing by default, so Metro would otherwise resolve two
-// different copies of react/react-native if any dependency accidentally
-// nests its own — force one copy from the app's node_modules.
-config.resolver.disableHierarchicalLookup = true;
-
 module.exports = config;
