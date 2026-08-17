@@ -12,8 +12,8 @@
     "id": "con.ch01.hrasva-dirgha",
     "titleTranslations": { "hi": "ह्रस्व और दीर्घ", "en": "Short and long" },
     "bodyTranslations": {
-      "hi": "अ इ उ ह्रस्व हैं। आ ई ऊ दीर्घ हैं। दीर्घ स्वर का उच्चारण दुगुना लम्बा होता है।",
-      "en": "अ इ उ are short. आ ई ऊ are long, held for twice as long. The difference changes what a word means, so it matters."
+      "hi": "अ इ उ ऋ ह्रस्व हैं। आ ई ऊ ॠ दीर्घ हैं। दीर्घ स्वर का उच्चारण दुगुना लम्बा होता है।",
+      "en": "अ इ उ ऋ are short. आ ई ऊ ॠ are long, held for twice as long. The difference changes what a word means, so it matters."
     },
     "source": "ncert-deepakam-ch01"
   }
