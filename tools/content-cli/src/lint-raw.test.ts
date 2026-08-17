@@ -8,30 +8,32 @@ const ZWJ = '\u200D';
 const ZWNJ = '\u200C';
 
 // THIN_SPACE (U+2009) and EM_SPACE (U+2003) are the two non-ASCII whitespace
-// characters pdftotext actually preserves from the PDFs' typographic kerning.
+// characters pdftotext actually preserves from the PDFs typographic kerning.
 // Same reasoning as above: escapes, not literal characters.
 const THIN_SPACE = '\u2009';
 const EM_SPACE = '\u2003';
 
+// REPLACEMENT_CHARACTER is what pdftotext emits when it cannot decode a
+// glyph at all. Same reasoning as above: a literal replacement character in
+// this file would be indistinguishable from an accidental one.
+const REPLACEMENT_CHARACTER = '\uFFFD';
+
 describe('lintRaw', () => {
   it('flags a space before a virama', () => {
-    // मनुष्याणां extracted as मनषु ्याणां
+    // manushyaanaam extracted as manuShu virama-yaaNaam
     expect(lintRaw('मनषु ्याणां').map((f) => f.rule)).toContain('space-before-virama');
   });
 
   it('flags a virama followed by a space and a consonant', () => {
-    // अङ्गानि extracted as अङ् गानि
     expect(lintRaw('अङ् गानि').map((f) => f.rule)).toContain('virama-space-consonant');
   });
 
   it('does not flag a virama followed by a space and a vowel', () => {
-    // प्रियम् अङ्गम् is correct Sanskrit: word-final म् then a new word.
-    // Without this restriction the rule would flag every word-final म्.
+    // Correct Sanskrit: word-final m-virama then a new word.
     expect(lintRaw('प्रियम् अङ्गम्').map((f) => f.rule)).not.toContain('virama-space-consonant');
   });
 
   it('flags an orphan matra after a space', () => {
-    // वर्णमालां extracted as वर्मण ालां -- the first line of chapter 1.
     expect(lintRaw('वयं वर्मण ालां पठामः').map((f) => f.rule)).toContain('orphan-matra');
   });
 
@@ -97,5 +99,27 @@ describe('lintRaw', () => {
   it('finds every occurrence on one line, not just the first', () => {
     expect(lintRaw('मनषु ्याणां मनषु ्याणां').filter((f) => f.rule === 'space-before-virama'))
       .toHaveLength(2);
+  });
+
+  // lost-glyph: pdftotext could not decode a glyph at all and emitted a
+  // replacement character. This is loss, not reordering -- kakSHaa (class)
+  // extracts with the whole k-SH conjunct gone.
+  it('flags a lost glyph', () => {
+    expect(lintRaw(`क${REPLACEMENT_CHARACTER}ा`).map((f) => f.rule)).toContain('lost-glyph');
+  });
+
+  it('does not flag lost-glyph when there is no replacement character', () => {
+    expect(lintRaw('वयं वर्णमालां पठामः ।').map((f) => f.rule)).not.toContain('lost-glyph');
+  });
+
+  // sign-before-matra: a sign (candrabindu, anusvara, visarga) follows its
+  // matra in correct Devanagari, never precedes it -- vaayuH extracts with
+  // the visarga and the matra swapped.
+  it('flags a sign placed before its matra', () => {
+    expect(lintRaw('वायःु').map((f) => f.rule)).toContain('sign-before-matra');
+  });
+
+  it('does not flag a sign correctly placed after its matra', () => {
+    expect(lintRaw('वायुः').map((f) => f.rule)).not.toContain('sign-before-matra');
   });
 });
