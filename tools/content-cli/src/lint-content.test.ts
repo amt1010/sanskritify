@@ -60,6 +60,27 @@ describe('lintContent', () => {
     expect(lintContent(p).map((f) => f.rule)).toContain('missing-sentence');
   });
 
+  // The mirror of the six cases above: proves the rule stays silent when the
+  // sentenceId reference is valid, not just that it fires when it isn't.
+  it.each([
+    ['translate-to-locale', { sentenceId: 'sen.a' }],
+    ['translate-to-sanskrit', { sentenceId: 'sen.a' }],
+    ['fill-blank', { sentenceId: 'sen.a', blankIndex: 0, options: ['क', 'ख'] }],
+    ['listen-build', { sentenceId: 'sen.a', audioRef: 'a.mp3' }],
+    ['order-sentence', { sentenceId: 'sen.a' }],
+    ['speak', { sentenceId: 'sen.a', enabled: false }],
+  ])('does not flag a %s referencing a sentence that exists', (type, rest) => {
+    const p = pack({
+      sentences: [{
+        id: 'sen.a', canonical: 'रामः', acceptedForms: ['रामः'],
+        translations: { hi: 'x', en: 'x' },
+        lexemeIds: [], source: 'original',
+      }] as ContentPack['sentences'],
+      lessons: [lesson('les.a', [{ id: 'ex.1', type, source: 'original', ...rest }])],
+    });
+    expect(lintContent(p).map((f) => f.rule)).not.toContain('missing-sentence');
+  });
+
   it('flags a sentence referencing a lexeme that does not exist', () => {
     const p = pack({
       sentences: [{
