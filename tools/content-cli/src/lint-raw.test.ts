@@ -7,6 +7,12 @@ import { lintRaw } from './lint-raw';
 const ZWJ = '\u200D';
 const ZWNJ = '\u200C';
 
+// THIN_SPACE (U+2009) and EM_SPACE (U+2003) are the two non-ASCII whitespace
+// characters pdftotext actually preserves from the PDFs' typographic kerning.
+// Same reasoning as above: escapes, not literal characters.
+const THIN_SPACE = '\u2009';
+const EM_SPACE = '\u2003';
+
 describe('lintRaw', () => {
   it('flags a space before a virama', () => {
     // मनुष्याणां extracted as मनषु ्याणां
@@ -62,9 +68,28 @@ describe('lintRaw', () => {
     expect(lintRaw('')).toEqual([]);
   });
 
+  // \s rather than a literal space is load-bearing. The PDFs use thin and em
+  // spaces for kerning and pdftotext preserves them: measured across the
+  // sixteen chapters, 217 corruption sites sit next to U+2009 and 17 next to
+  // U+2003. A literal-space rule misses 261 findings, about 10% of the total.
+  it.each([
+    ['a thin space', THIN_SPACE],
+    ['an em space', EM_SPACE],
+    ['a tab', '\t'],
+  ])('flags a virama separated by %s', (_label, ws) => {
+    expect(lintRaw(`मनषु${ws}्याणां`).map((f) => f.rule)).toContain('space-before-virama');
+  });
+
+  it('flags an orphan matra after a thin space', () => {
+    expect(lintRaw(`वयं वर्मण${THIN_SPACE}ालां`).map((f) => f.rule)).toContain('orphan-matra');
+  });
+
   // CRLF files are the normal case on Windows: pdftotext writes them and the
-  // working copy keeps them even though the committed blob is LF. A trailing
-  // \r must not produce phantom findings.
+  // working copy keeps them even though the committed blob is LF. This proves
+  // a trailing \r produces no phantom findings on clean text -- it does not
+  // prove \s specifically over a literal space, since a trailing \r always sits
+  // last on a split line, never next to a virama or matra. The thin/em-space
+  // cases above are what prove \s is load-bearing.
   it('is unaffected by CRLF line endings', () => {
     expect(lintRaw('वयं वर्णमालां पठामः ।\r\nशुद्धम् ।\r\n')).toEqual([]);
   });
