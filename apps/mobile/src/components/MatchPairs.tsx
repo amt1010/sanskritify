@@ -56,5 +56,5 @@ const styles = StyleSheet.create({
   },
   tileActive: { borderColor: '#1a7f37', backgroundColor: '#eaf6ec' },
   deva: { fontFamily: 'NotoDeva', fontSize: 22 },
-  gloss: { fontSize: 16 },
+  gloss: { fontFamily: 'NotoDeva', fontSize: 16 },
 });

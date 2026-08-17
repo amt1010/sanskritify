@@ -151,7 +151,7 @@ export function LessonScreen({ lessonId, locale = 'hi' }: LessonScreenProps) {
 const styles = StyleSheet.create({
   screen: { flex: 1, padding: 20, gap: 20, justifyContent: 'center' },
   hud: { flexDirection: 'row', justifyContent: 'space-between' },
-  prompt: { fontSize: 18, textAlign: 'center' },
+  prompt: { fontFamily: 'NotoDeva', fontSize: 18, textAlign: 'center' },
   target: { fontFamily: 'NotoDeva', fontSize: 64, textAlign: 'center' },
   options: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center' },
   option: {
@@ -160,11 +160,11 @@ const styles = StyleSheet.create({
   },
   optionActive: { borderColor: '#1a7f37', backgroundColor: '#eaf6ec' },
   deva: { fontFamily: 'NotoDeva', fontSize: 32 },
-  hint: { textAlign: 'center', color: '#9a6700', fontSize: 16 },
+  hint: { fontFamily: 'NotoDeva', textAlign: 'center', color: '#9a6700', fontSize: 16 },
   check: {
     backgroundColor: '#1a7f37', borderRadius: 14, padding: 16, alignItems: 'center',
   },
   checkDisabled: { backgroundColor: '#9ba3ab' },
-  checkText: { color: 'white', fontSize: 18, fontWeight: '600' },
+  checkText: { fontFamily: 'NotoDeva', color: 'white', fontSize: 18, fontWeight: '600' },
   big: { fontFamily: 'NotoDeva', fontSize: 40, textAlign: 'center' },
 });

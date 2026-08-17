@@ -14,7 +14,7 @@ module.exports = {
       files: ['packages/core/**/*.ts', 'packages/sanskrit/**/*.ts'],
       rules: {
         'no-restricted-imports': ['error', {
-          patterns: ['react', 'react-native', 'react-native/*', 'expo', 'expo-*'],
+          patterns: ['react', 'react-dom', 'react-native', 'react-native-*', 'react-native/*', 'expo', 'expo-*', '@expo/*'],
         }],
       },
     },
