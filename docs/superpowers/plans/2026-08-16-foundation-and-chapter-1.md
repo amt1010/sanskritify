@@ -698,9 +698,12 @@ Expected: FAIL, `composeAkshara is not exported`.
 
 - [ ] **Step 3: Write minimal implementation**
 
-Append to `packages/sanskrit/src/akshara.ts`:
+Append to `packages/sanskrit/src/akshara.ts`. Merge `isMatra` and `VIRAMA`
+into the existing `import { ... } from './chars'` line at the top of the file
+rather than adding a second import statement:
 ```ts
-import { isMatra, VIRAMA } from './chars';
+// top of file becomes:
+// import { isConsonant, isIndependentVowel, isMatra, isVirama, VIRAMA } from './chars';
 
 export interface AksharaPart {
   consonant: string;
@@ -832,7 +835,14 @@ Schema covers all 11 exercise types from spec §4.2. Only three get renderers in
 `packages/content/src/schema.test.ts`:
 ```ts
 import { describe, it, expect } from 'vitest';
-import { LexemeSchema, ExerciseSchema, LessonSchema } from './schema';
+// akshara-select carries a .refine, so it is a ZodEffects and cannot join a
+// discriminatedUnion. The exported union that includes it is
+// ExerciseSchemaWithRefinements; alias it here.
+import {
+  LexemeSchema,
+  LessonSchema,
+  ExerciseSchemaWithRefinements as ExerciseSchema,
+} from './schema';
 
 describe('LexemeSchema', () => {
   it('accepts a valid lexeme', () => {
@@ -875,6 +885,7 @@ describe('ExerciseSchema', () => {
       type: 'akshara-select',
       target: 'ऋ',
       options: ['ऋ', 'ऊ', 'उ', 'ऌ'],
+      promptTranslations: { hi: 'ऋ चुनो', en: 'Pick ऋ' },
       source: 'ncert-deepakam-ch01',
     });
     expect(parsed.options).toHaveLength(4);
@@ -887,6 +898,19 @@ describe('ExerciseSchema', () => {
         type: 'akshara-select',
         target: 'ऋ',
         options: ['ऊ', 'उ', 'ऌ'],
+        promptTranslations: { hi: 'ऋ चुनो', en: 'Pick ऋ' },
+        source: 'ncert-deepakam-ch01',
+      }),
+    ).toThrow();
+  });
+
+  it('rejects an akshara-select with no prompt, which would show the answer', () => {
+    expect(() =>
+      ExerciseSchema.parse({
+        id: 'ex.ch01.004',
+        type: 'akshara-select',
+        target: 'ऋ',
+        options: ['ऋ', 'ऊ', 'उ', 'ऌ'],
         source: 'ncert-deepakam-ch01',
       }),
     ).toThrow();
@@ -978,6 +1002,10 @@ const AksharaSelect = z
     type: z.literal('akshara-select'),
     target: z.string().min(1),
     options: z.array(z.string().min(1)).min(2).max(6),
+    // The learner is asked a question, never shown the answer. Without audio
+    // in v1 the prompt is the only thing that makes this exercise solvable,
+    // so it is required rather than optional.
+    promptTranslations: TranslationsSchema,
     conceptId: z.string().startsWith('con.').optional(),
     audioRef: z.string().optional(),
   })
@@ -1168,7 +1196,9 @@ describe('gradeAnswer, akshara-build', () => {
 
 const select: Exercise = {
   id: 'ex.ch01.001', type: 'akshara-select', target: 'ऋ',
-  options: ['ऋ', 'ऊ', 'उ', 'ऌ'], source: 'ncert-deepakam-ch01',
+  options: ['ऋ', 'ऊ', 'उ', 'ऌ'],
+  promptTranslations: { hi: 'ऋ चुनो', en: 'Pick ऋ' },
+  source: 'ncert-deepakam-ch01',
 };
 
 describe('gradeAnswer, akshara-select', () => {
@@ -1299,9 +1329,10 @@ export function gradeAnswer(
       return WRONG;
   }
 }
-
-export type { Answer, GradeContext, GradeResult, Verdict, HintCode } from './types';
 ```
+
+Do **not** re-export the types from `grading.ts`. `index.ts` already does
+`export * from './types'`, and a second path to the same names collides.
 
 `packages/core/src/index.ts`:
 ```ts
@@ -2294,7 +2325,7 @@ export function buildPack(pack: ContentPack): { json: string; hash: string } {
 }
 ```
 
-Add `lint:content` and `build` branches to the CLI `switch`, mirroring the `lint:raw` branch: read `packages/content/data/**/*.json`, assemble a `ContentPack`, run `lintContent`, print findings, then `buildPack` and write to `packages/content/dist/pack-<hash>.json`. Exit code 1 if there are any findings.
+Add `lint:content` and `build` branches to the CLI `switch`, mirroring the `lint:raw` branch: read `packages/content/src/data/**/*.json` (that is the canonical content path — note the `src/`), assemble a `ContentPack`, run `lintContent`, print findings, then `buildPack` and write to `packages/content/dist/pack-<hash>.json`. Exit code 1 if there are any findings.
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -2448,20 +2479,25 @@ Chapter 1 teaches letters, not words, so it has no lexemes. The empty array keep
   "titleTranslations": { "hi": "समानाक्षर स्वर", "en": "Simple vowels" },
   "exercises": [
     { "id": "ex.ch01.001", "type": "akshara-select", "target": "अ",
-      "options": ["अ", "आ", "इ", "उ"], "conceptId": "con.ch01.svara",
-      "source": "ncert-deepakam-ch01" },
+      "options": ["अ", "आ", "इ", "उ"],
+      "promptTranslations": { "hi": "सबसे पहला स्वर चुनो", "en": "Pick the first vowel of the वर्णमाला" },
+      "conceptId": "con.ch01.svara", "source": "ncert-deepakam-ch01" },
     { "id": "ex.ch01.002", "type": "akshara-select", "target": "आ",
-      "options": ["अ", "आ", "ई", "ऊ"], "conceptId": "con.ch01.hrasva-dirgha",
-      "source": "ncert-deepakam-ch01" },
+      "options": ["अ", "आ", "ई", "ऊ"],
+      "promptTranslations": { "hi": "'अ' का दीर्घ रूप चुनो", "en": "Pick the long form of अ" },
+      "conceptId": "con.ch01.hrasva-dirgha", "source": "ncert-deepakam-ch01" },
     { "id": "ex.ch01.003", "type": "akshara-select", "target": "इ",
-      "options": ["इ", "ई", "उ", "ऋ"], "conceptId": "con.ch01.svara",
-      "source": "ncert-deepakam-ch01" },
+      "options": ["इ", "ई", "उ", "ऋ"],
+      "promptTranslations": { "hi": "'ई' का ह्रस्व रूप चुनो", "en": "Pick the short form of ई" },
+      "conceptId": "con.ch01.svara", "source": "ncert-deepakam-ch01" },
     { "id": "ex.ch01.004", "type": "akshara-select", "target": "ऊ",
-      "options": ["उ", "ऊ", "ओ", "औ"], "conceptId": "con.ch01.hrasva-dirgha",
-      "source": "ncert-deepakam-ch01" },
+      "options": ["उ", "ऊ", "ओ", "औ"],
+      "promptTranslations": { "hi": "'उ' का दीर्घ रूप चुनो", "en": "Pick the long form of उ" },
+      "conceptId": "con.ch01.hrasva-dirgha", "source": "ncert-deepakam-ch01" },
     { "id": "ex.ch01.005", "type": "akshara-select", "target": "ऋ",
-      "options": ["ऋ", "ऌ", "इ", "उ"], "conceptId": "con.ch01.svara",
-      "source": "ncert-deepakam-ch01" },
+      "options": ["ऋ", "ऌ", "इ", "उ"],
+      "promptTranslations": { "hi": "'कृषि' शब्द में जो स्वर है, वह चुनो", "en": "Pick the vowel heard in कृषि" },
+      "conceptId": "con.ch01.svara", "source": "ncert-deepakam-ch01" },
     { "id": "ex.ch01.006", "type": "akshara-build", "target": "कि",
       "conceptId": "con.ch01.svara", "source": "ncert-deepakam-ch01" },
     { "id": "ex.ch01.007", "type": "akshara-build", "target": "की",
@@ -2473,6 +2509,24 @@ Chapter 1 teaches letters, not words, so it has no lexemes. The empty array keep
 ```
 
 Exercises 006 to 008 pair a matra with its independent vowel, which is what makes the ह्रस्व/दीर्घ distinction concrete rather than a table to memorise.
+
+Also create `packages/content/src/data/ch01/index.ts` so consumers import from
+the package surface rather than reaching into `src/data/`:
+```ts
+import lessonJson from './lesson-01.json';
+import lexemesJson from './lexemes.json';
+import conceptsJson from './concepts.json';
+
+export const ch01Lesson: unknown = lessonJson;
+export const ch01Lexemes: unknown[] = lexemesJson;
+export const ch01Concepts: unknown[] = conceptsJson;
+```
+They are exported as `unknown` deliberately: callers must run them through the
+Zod schemas, so a malformed JSON edit fails loudly at the boundary rather than
+being trusted because TypeScript inferred a shape from the file.
+
+Add `export * from './data/ch01';` to `packages/content/src/index.ts`, and set
+`"resolveJsonModule": true` in `packages/content/tsconfig.json`.
 
 - [ ] **Step 5: Run test to verify it passes**
 
@@ -2812,18 +2866,27 @@ export function AksharaComposer({
 
       <View style={styles.keys}>
         {consonants.map((c) => (
-          <Pressable key={c} style={styles.key} onPress={() => pressConsonant(c)}>
+          <Pressable
+            key={c} testID={`key-${c}`} style={styles.key}
+            onPress={() => pressConsonant(c)}
+          >
             <Text style={styles.keyText}>{c}</Text>
           </Pressable>
         ))}
       </View>
 
       <View style={styles.keys}>
-        <Pressable style={[styles.key, styles.viramaKey]} onPress={pressVirama}>
+        <Pressable
+          testID="key-virama" style={[styles.key, styles.viramaKey]}
+          onPress={pressVirama}
+        >
           <Text style={styles.keyText}>{VIRAMA_KEY}</Text>
         </Pressable>
         {matras.map((m) => (
-          <Pressable key={m} style={styles.key} onPress={() => pressMatra(m)}>
+          <Pressable
+            key={m} testID={`key-${m}`} style={styles.key}
+            onPress={() => pressMatra(m)}
+          >
             <Text style={styles.keyText}>{m}</Text>
           </Pressable>
         ))}
@@ -2892,24 +2955,32 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { LessonScreen } from './LessonScreen';
 
 describe('LessonScreen', () => {
+  // The HUD renders strings like "♥ 5" and "1 / 8", so assertions are against
+  // string content, not numbers.
   it('shows five hearts at the start', () => {
     const { getByTestId } = render(<LessonScreen lessonId="les.ch01.u1.l1" />);
-    expect(getByTestId('hearts').props.children).toContain(5);
+    expect(getByTestId('hearts').props.children).toContain('5');
+  });
+
+  it('never renders the target for akshara-select, which would be the answer', () => {
+    const { queryAllByText } = render(<LessonScreen lessonId="les.ch01.u1.l1" />);
+    // अ appears exactly once, as an option tile — not also as a prompt.
+    expect(queryAllByText('अ')).toHaveLength(1);
   });
 
   it('advances to the next exercise after a correct answer', () => {
-    const { getByText, getByTestId } = render(<LessonScreen lessonId="les.ch01.u1.l1" />);
+    const { getByTestId } = render(<LessonScreen lessonId="les.ch01.u1.l1" />);
     // Exercise 1 is akshara-select with target अ.
-    fireEvent.press(getByText('अ'));
+    fireEvent.press(getByTestId('opt-अ'));
     fireEvent.press(getByTestId('check'));
-    expect(getByTestId('progress').props.children).toContain(2);
+    expect(getByTestId('progress').props.children).toContain('2');
   });
 
   it('loses a heart on a wrong answer', () => {
-    const { getByText, getByTestId } = render(<LessonScreen lessonId="les.ch01.u1.l1" />);
-    fireEvent.press(getByText('आ')); // wrong; target is अ
+    const { getByTestId } = render(<LessonScreen lessonId="les.ch01.u1.l1" />);
+    fireEvent.press(getByTestId('opt-आ')); // wrong; target is अ
     fireEvent.press(getByTestId('check'));
-    expect(getByTestId('hearts').props.children).toContain(4);
+    expect(getByTestId('hearts').props.children).toContain('4');
   });
 
   it('shows the matra hint on a near-miss without losing a heart', () => {
@@ -2921,7 +2992,7 @@ describe('LessonScreen', () => {
     fireEvent.press(getByTestId('key-ी'));
     fireEvent.press(getByTestId('check'));
     expect(queryByText(/मात्रा/)).toBeTruthy();
-    expect(getByTestId('hearts').props.children).toContain(5);
+    expect(getByTestId('hearts').props.children).toContain('5');
   });
 });
 ```
@@ -2935,9 +3006,10 @@ Expected: FAIL, `Cannot find module './LessonScreen'`.
 
 `apps/mobile/src/content/loadLesson.ts`:
 ```ts
-import { LessonSchema, LexemeSchema, type Lesson, type Lexeme } from '@sanskritify/content';
-import ch01Lesson from '@sanskritify/content/src/data/ch01/lesson-01.json';
-import ch01Lexemes from '@sanskritify/content/src/data/ch01/lexemes.json';
+import {
+  LessonSchema, LexemeSchema, ch01Lesson, ch01Lexemes,
+  type Lesson, type Lexeme,
+} from '@sanskritify/content';
 
 // Bundled content only. Task 12's pack build and OTA delivery replace this
 // in a later plan; the shape of what the screen consumes does not change.
@@ -3096,8 +3168,9 @@ export function LessonScreen({ lessonId, locale = 'hi', startIndex = 0 }: Lesson
 
       {exercise.type === 'akshara-select' && (
         <>
-          <Text style={styles.prompt}>{locale === 'hi' ? 'सही अक्षर चुनो' : 'Pick the letter'}</Text>
-          <Text style={styles.target}>{exercise.target}</Text>
+          {/* Never render exercise.target here. The target is one of the
+              options, so showing it would display the answer. */}
+          <Text style={styles.prompt}>{exercise.promptTranslations[locale]}</Text>
           <View style={styles.options}>
             {exercise.options.map((o) => (
               <Pressable
@@ -3166,7 +3239,7 @@ const styles = StyleSheet.create({
 });
 ```
 
-The `akshara-select` test presses `getByText('अ')`, which resolves through the option tiles. The near-miss test uses `testID="key-क"`, so add matching `testID={`key-${c}`}` and `testID={`key-${m}`}` props to the composer's `Pressable` keys in `AksharaComposer.tsx`.
+Option tiles carry `testID={`opt-${o}`}` so tests select them unambiguously, and the composer keys already carry `testID={`key-${c}`}` from Task 15. Do not edit `AksharaComposer.tsx` in this task.
 
 - [ ] **Step 6: Wire the route**
 

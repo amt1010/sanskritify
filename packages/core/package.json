@@ -1,0 +1,15 @@
+{
+  "name": "@sanskritify/core",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@sanskritify/sanskrit": "workspace:*",
+    "@sanskritify/content": "workspace:*"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@sanskritify/sanskrit",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  }
+}

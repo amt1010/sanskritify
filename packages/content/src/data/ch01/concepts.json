@@ -1,0 +1,20 @@
+[
+  {
+    "id": "con.ch01.svara",
+    "titleTranslations": { "hi": "स्वर", "en": "Vowels" },
+    "bodyTranslations": {
+      "hi": "वर्ण दो प्रकार के होते हैं — स्वर और व्यञ्जन। स्वरों का उच्चारण स्वतन्त्र रूप से होता है।",
+      "en": "Letters are of two kinds: vowels and consonants. A vowel is pronounced on its own, without needing another sound."
+    },
+    "source": "ncert-deepakam-ch01"
+  },
+  {
+    "id": "con.ch01.hrasva-dirgha",
+    "titleTranslations": { "hi": "ह्रस्व और दीर्घ", "en": "Short and long" },
+    "bodyTranslations": {
+      "hi": "अ इ उ ह्रस्व हैं। आ ई ऊ दीर्घ हैं। दीर्घ स्वर का उच्चारण दुगुना लम्बा होता है।",
+      "en": "अ इ उ are short. आ ई ऊ are long, held for twice as long. The difference changes what a word means, so it matters."
+    },
+    "source": "ncert-deepakam-ch01"
+  }
+]

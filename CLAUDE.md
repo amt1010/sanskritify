@@ -41,8 +41,11 @@ without conflict.
 `near-miss` is narrow: consonant sequence correct, matra or halant wrong.
 
 **The composer holds parts, not a string.** `Akshara` is
-`{ parts: AksharaPart[], matra: string | null }`. Editing Devanagari strings
-directly means fighting matra reordering; editing parts does not.
+`{ parts: AksharaPart[], matra: string | null, sign: string | null }`.
+Anusvara and visarga get their own `sign` slot because they are written after
+the matra — filing them as a part or a matra reorders the composed string.
+Editing Devanagari strings directly means fighting matra reordering; editing
+parts does not.
 
 **Devanagari logic lives in `packages/sanskrit` and nowhere else.** The
 composer and the content validator must agree exactly, or the app accepts
