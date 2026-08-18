@@ -154,4 +154,21 @@ describe('LessonScreen', () => {
     const stored = await loadProgress();
     expect(stored.hearts.count).toBe(4);
   });
+
+  it('records today as an activity day on the first answer', async () => {
+    const { getByTestId } = await render(<LessonScreen lessonId="les.ch01.u1.l1" />);
+    await playSelect(getByTestId, 'अ');
+    const stored = await loadProgress();
+    const today = new Date().toISOString().slice(0, 10);
+    expect(stored.activityDays).toContain(today);
+  });
+
+  it('records the activity day only once per session', async () => {
+    const { getByTestId } = await render(<LessonScreen lessonId="les.ch01.u1.l1" />);
+    await playSelect(getByTestId, 'अ');
+    await playSelect(getByTestId, 'आ');
+    const stored = await loadProgress();
+    const today = new Date().toISOString().slice(0, 10);
+    expect(stored.activityDays.filter((d) => d === today)).toHaveLength(1);
+  });
 });

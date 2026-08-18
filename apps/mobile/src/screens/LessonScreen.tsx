@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
-  createSession, currentExercise, currentHearts, msUntilNextHeart, submitAnswer,
+  createSession, currentExercise, currentHearts, msUntilNextHeart, recordActivityDay, submitAnswer,
   type Answer, type GradeContext, type GradeResult, type SessionState,
 } from '@sanskritify/core';
 import type { Akshara } from '@sanskritify/sanskrit';
@@ -34,6 +34,11 @@ export function LessonScreen({ lessonId, locale = 'hi' }: LessonScreenProps) {
   const [draft, setDraft] = useState<Answer | null>(null);
   const [akshara, setAkshara] = useState<Akshara>(EMPTY_AKSHARA);
   const [result, setResult] = useState<GradeResult | null>(null);
+
+  // Recorded once per mount: the first answer, right or wrong, means the
+  // learner engaged today. Gating this on lesson completion would erase a
+  // hard day that ended in a fail.
+  const recordedActivity = useRef(false);
 
   // A fresh mount is a fresh lesson attempt, so this also re-checks hearts
   // if the learner backs out and returns after regen time has passed.
@@ -97,12 +102,21 @@ export function LessonScreen({ lessonId, locale = 'hi' }: LessonScreenProps) {
     // currentHearts) is always re-derivable from the original stored
     // snapshot plus elapsed time, so it's never worth a write; a loss is not
     // derivable from anything and must be persisted before the app can be
-    // killed out from under it.
+    // killed out from under it. Same reasoning for the activity day: once
+    // today is recorded there's nothing new to write.
+    let nextProgress = progress;
     if (next.state.hearts < session.hearts) {
-      const nextProgress: StoredProgress = {
-        ...progress,
-        hearts: { count: next.state.hearts, updatedAt: Date.now() },
-      };
+      nextProgress = { ...nextProgress, hearts: { count: next.state.hearts, updatedAt: Date.now() } };
+    }
+    if (!recordedActivity.current) {
+      recordedActivity.current = true;
+      const today = new Date().toISOString().slice(0, 10);
+      const activityDays = recordActivityDay(nextProgress.activityDays, today);
+      if (activityDays !== nextProgress.activityDays) {
+        nextProgress = { ...nextProgress, activityDays };
+      }
+    }
+    if (nextProgress !== progress) {
       setProgress(nextProgress);
       void saveProgress(nextProgress);
     }
