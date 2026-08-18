@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { currentHearts, HEART_REGEN_MS } from './hearts';
+import { currentHearts, msUntilNextHeart, HEART_REGEN_MS } from './hearts';
 
 const T0 = 1_700_000_000_000;
 
@@ -59,5 +59,48 @@ describe('currentHearts', () => {
 
   it('names the offending value in the error', () => {
     expect(() => currentHearts(3, T0, NaN, 5)).toThrow(/got NaN/);
+  });
+});
+
+describe('msUntilNextHeart', () => {
+  it('is zero once at the maximum', () => {
+    expect(msUntilNextHeart(5, T0, T0, 5)).toBe(0);
+  });
+
+  it('is zero when stored is already above the maximum', () => {
+    expect(msUntilNextHeart(9, T0, T0, 5)).toBe(0);
+  });
+
+  it('is a full interval right after the last update', () => {
+    expect(msUntilNextHeart(3, T0, T0, 5)).toBe(HEART_REGEN_MS);
+  });
+
+  it('counts down within the current interval', () => {
+    expect(msUntilNextHeart(3, T0, T0 + 100, 5)).toBe(HEART_REGEN_MS - 100);
+  });
+
+  it('is zero the instant regen catches up to the maximum', () => {
+    // stored=3, max=5: two intervals of elapsed time regenerate exactly to 5.
+    expect(msUntilNextHeart(3, T0, T0 + HEART_REGEN_MS * 2, 5)).toBe(0);
+  });
+
+  it('resets to a full interval just after a heart regenerates', () => {
+    expect(msUntilNextHeart(3, T0, T0 + HEART_REGEN_MS + 1, 5)).toBe(HEART_REGEN_MS - 1);
+  });
+
+  it('treats a backwards clock as no elapsed time', () => {
+    expect(msUntilNextHeart(2, T0, T0 - HEART_REGEN_MS * 10, 5)).toBe(HEART_REGEN_MS);
+  });
+
+  it.each([
+    ['stored', () => msUntilNextHeart(NaN, T0, T0, 5)],
+    ['updatedAt', () => msUntilNextHeart(3, NaN, T0, 5)],
+    ['now', () => msUntilNextHeart(3, T0, NaN, 5)],
+  ])('throws for a non-finite %s', (_label, call) => {
+    expect(call).toThrow();
+  });
+
+  it.each([[-1], [2.5], [NaN]])('throws for max = %p', (max) => {
+    expect(() => msUntilNextHeart(3, T0, T0, max)).toThrow();
   });
 });
