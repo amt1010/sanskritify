@@ -699,21 +699,23 @@ git commit -m "Record today's activity day toward the streak"
 
 **Files:**
 - Modify: `apps/mobile/app/index.tsx`
-- Test: `apps/mobile/app/index.test.tsx` (new)
+- Test: `apps/mobile/src/screens/Home.test.tsx` (new)
 
 **Interfaces:**
 - Consumes: `streakLength` (`@sanskritify/core`, existing export); `loadProgress` (Task 3).
 - Produces: `testID="streak"` on the badge `Text`, rendered only when the streak is `> 0`.
 
+**Bug found during manual verification, not caught by the test suite:** the test must NOT live inside `apps/mobile/app/` alongside `index.tsx`, even though every other test in this codebase is co-located with the file it tests. `app/` is expo-router's route directory — every file under it (matching a route extension) is picked up as a route and bundled into the actual running app, test files included. With `index.test.tsx` sitting there, the real app crashed on load with `Uncaught Error: expect is not defined`, because `describe`/`it`/`expect` are Jest globals that don't exist at runtime. `jest`'s test runner doesn't care where the file lives and passes either way, so nothing short of actually running the app catches this — confirmed by running `pnpm --filter @sanskritify/mobile test` clean, then loading the real app and hitting the crash. Fixed by putting the test in `src/screens/` instead, matching where `LessonScreen.test.tsx` already lives, importing `Home` from `'../../app/index'`.
+
 - [ ] **Step 1: Write the failing tests**
 
-Create `apps/mobile/app/index.test.tsx`:
+Create `apps/mobile/src/screens/Home.test.tsx`:
 
 ```ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { render } from '@testing-library/react-native';
-import Home from './index';
-import { saveProgress } from '../src/storage/progressStore';
+import Home from '../../app/index';
+import { saveProgress } from '../storage/progressStore';
 
 beforeEach(async () => {
   await AsyncStorage.clear();
@@ -736,7 +738,7 @@ describe('Home', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `pnpm --filter @sanskritify/mobile test -- index.test`
+Run: `pnpm --filter @sanskritify/mobile test -- Home.test`
 Expected: FAIL — no `testID="streak"` exists.
 
 - [ ] **Step 3: Implement**
@@ -800,27 +802,27 @@ const styles = StyleSheet.create({
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `pnpm --filter @sanskritify/mobile test -- index.test`
+Run: `pnpm --filter @sanskritify/mobile test -- Home.test`
 Expected: PASS, both cases.
 
-- [ ] **Step 5: Typecheck and full test suite**
+- [ ] **Step 5: Typecheck, full test suite, and a real run**
 
 Run: `pnpm --filter @sanskritify/mobile typecheck`
 Run: `pnpm --filter @sanskritify/mobile test`
 Run: `pnpm --filter @sanskritify/core test`
-Expected: everything passes — this is the last task in the slice.
+Expected: everything passes.
+
+This is the last task in the slice, and the test suite passing is not sufficient proof by itself — Task 6's own bug (a route-directory test file crashing the real app while every automated check stayed green) is exactly why. Actually run the app: `pnpm --filter @sanskritify/mobile web`, open it, confirm the home screen loads with no console errors, play the lesson to a wrong answer, reload, confirm hearts stayed at the lower count, return to the home screen, confirm the 🔥 badge shows.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add apps/mobile/app/index.tsx apps/mobile/app/index.test.tsx
+git add apps/mobile/app/index.tsx apps/mobile/src/screens/Home.test.tsx
 git commit -m "Show a streak badge on the home screen"
 ```
 
 ---
 
 ## After this plan
-
-Verify manually: run the app (`pnpm --filter @sanskritify/mobile web`), play the lesson to a wrong answer, reload the page, confirm hearts stayed at 4. Complete or fail a lesson, return to the home screen, confirm the 🔥 badge shows.
 
 Remaining slices of the parent spec's build-order step 4 (lesson path/unit progression, review scheduling, daily goal, achievements) are out of scope here and get their own spec + plan, per `docs/superpowers/specs/2026-08-18-local-progress-persistence-design.md` §1.

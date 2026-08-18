@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { render } from '@testing-library/react-native';
-import Home from './index';
-import { saveProgress } from '../src/storage/progressStore';
+import Home from '../../app/index';
+import { saveProgress } from '../storage/progressStore';
 
 beforeEach(async () => {
   await AsyncStorage.clear();
