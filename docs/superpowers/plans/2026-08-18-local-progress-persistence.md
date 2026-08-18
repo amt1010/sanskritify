@@ -210,15 +210,17 @@ Expected: FAIL — `recordActivityDay is not defined` / not exported.
 
 - [ ] **Step 3: Implement**
 
-In `packages/core/src/streak.ts`, add after `streakLength` (the existing `ISO_DAY` regex at the top of the file is already in scope — reuse it rather than duplicating the pattern):
+In `packages/core/src/streak.ts`, add after `streakLength`. **Correction found during execution:** the plan's first draft validated with the `ISO_DAY` regex alone, but that only checks the `YYYY-MM-DD` shape — `2026-08-32` matches it despite not being a real date. `toUtcDay` (already in this file, not exported) does the full calendar round-trip check `streakLength` relies on for the same reason; reuse it instead of re-validating with the regex, or `recordActivityDay('2026-08-32')` silently accepts a corrupt day:
 
 ```ts
 // Dedupe/insert only — no sort. streakLength consumes this as a Set and
 // doesn't care about order, and neither does anything else that reads it.
 export function recordActivityDay(activityDays: string[], day: string): string[] {
-  if (!ISO_DAY.test(day)) {
-    throw new Error(`day must be YYYY-MM-DD, got ${JSON.stringify(day)}`);
-  }
+  // toUtcDay does full calendar validation (not just the YYYY-MM-DD shape,
+  // which 2026-08-32 also matches) and throws with `day` in the message.
+  // Its numeric result isn't needed here — recordActivityDay stores strings,
+  // same as toUtcDay's caller streakLength does.
+  toUtcDay(day);
   if (activityDays.includes(day)) return activityDays;
   return [...activityDays, day];
 }
