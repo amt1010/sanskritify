@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   createSession, currentExercise, submitAnswer,
   type Answer, type GradeContext, type GradeResult, type SessionState,
@@ -75,15 +75,15 @@ export function LessonScreen({ lessonId, locale = 'hi' }: LessonScreenProps) {
 
   if (exercise === null || session.status !== 'in_progress') {
     return (
-      <View style={styles.screen}>
+      <ScrollView contentContainerStyle={styles.screen}>
         <Text style={styles.big}>{session.status === 'complete' ? 'साधु!' : 'पुनः प्रयत्नं कुरु'}</Text>
         <Text testID="xp">{`XP ${session.xp}`}</Text>
-      </View>
+      </ScrollView>
     );
   }
 
   return (
-    <View style={styles.screen}>
+    <ScrollView contentContainerStyle={styles.screen}>
       <View style={styles.hud}>
         <Text testID="progress">{`${session.index + 1} / ${session.queue.length}`}</Text>
         <Text testID="hearts">{`♥ ${session.hearts}`}</Text>
@@ -144,12 +144,12 @@ export function LessonScreen({ lessonId, locale = 'hi' }: LessonScreenProps) {
       >
         <Text style={styles.checkText}>{locale === 'hi' ? 'जाँचो' : 'Check'}</Text>
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, padding: 20, gap: 20, justifyContent: 'center' },
+  screen: { flexGrow: 1, padding: 20, gap: 20, justifyContent: 'center' },
   hud: { flexDirection: 'row', justifyContent: 'space-between' },
   prompt: { fontFamily: 'NotoDeva', fontSize: 18, textAlign: 'center' },
   target: { fontFamily: 'NotoDeva', fontSize: 64, textAlign: 'center' },
