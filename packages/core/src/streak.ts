@@ -51,3 +51,15 @@ export function streakLength(activityDays: string[], today: string): number {
   }
   return length;
 }
+
+// Dedupe/insert only — no sort. streakLength consumes this as a Set and
+// doesn't care about order, and neither does anything else that reads it.
+export function recordActivityDay(activityDays: string[], day: string): string[] {
+  // toUtcDay does full calendar validation (not just the YYYY-MM-DD shape,
+  // which 2026-08-32 also matches) and throws with `day` in the message.
+  // Its numeric result isn't needed here — recordActivityDay stores strings,
+  // same as toUtcDay's caller streakLength does.
+  toUtcDay(day);
+  if (activityDays.includes(day)) return activityDays;
+  return [...activityDays, day];
+}

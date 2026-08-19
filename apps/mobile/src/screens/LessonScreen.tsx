@@ -1,13 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
-  createSession, currentExercise, submitAnswer,
+  createSession, currentExercise, currentHearts, msUntilNextHeart, recordActivityDay, submitAnswer,
   type Answer, type GradeContext, type GradeResult, type SessionState,
 } from '@sanskritify/core';
 import type { Akshara } from '@sanskritify/sanskrit';
 import { AksharaComposer } from '../components/AksharaComposer';
 import { MatchPairs } from '../components/MatchPairs';
 import { loadLesson, loadLexemes } from '../content/loadLesson';
+import { loadProgress, saveProgress, MAX_HEARTS, type StoredProgress } from '../storage/progressStore';
 
 const EMPTY_AKSHARA: Akshara = { parts: [], matra: null, sign: null };
 
@@ -27,14 +28,39 @@ export function LessonScreen({ lessonId, locale = 'hi' }: LessonScreenProps) {
   const lesson = useMemo(() => loadLesson(lessonId), [lessonId]);
   const ctx: GradeContext = useMemo(() => ({ lexemes: loadLexemes(), locale }), [locale]);
 
-  const [session, setSession] = useState<SessionState>(() =>
-    createSession(lesson, { hearts: 5, maxHearts: 5 }),
-  );
+  const [progress, setProgress] = useState<StoredProgress | null>(null);
+  const [session, setSession] = useState<SessionState | null>(null);
+  const [heartsWaitMs, setHeartsWaitMs] = useState<number | null>(null);
   const [draft, setDraft] = useState<Answer | null>(null);
   const [akshara, setAkshara] = useState<Akshara>(EMPTY_AKSHARA);
   const [result, setResult] = useState<GradeResult | null>(null);
 
-  const exercise = currentExercise(session);
+  // Recorded once per mount: the first answer, right or wrong, means the
+  // learner engaged today. Gating this on lesson completion would erase a
+  // hard day that ended in a fail.
+  const recordedActivity = useRef(false);
+
+  // A fresh mount is a fresh lesson attempt, so this also re-checks hearts
+  // if the learner backs out and returns after regen time has passed.
+  useEffect(() => {
+    let cancelled = false;
+    loadProgress().then((stored) => {
+      if (cancelled) return;
+      const now = Date.now();
+      const live = currentHearts(stored.hearts.count, stored.hearts.updatedAt, now, MAX_HEARTS);
+      setProgress(stored);
+      if (live <= 0) {
+        setHeartsWaitMs(msUntilNextHeart(stored.hearts.count, stored.hearts.updatedAt, now, MAX_HEARTS));
+        return;
+      }
+      setSession(createSession(lesson, { hearts: live, maxHearts: MAX_HEARTS }));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [lesson]);
+
+  const exercise = session === null ? null : currentExercise(session);
 
   // The draft answer must start empty for a new exercise. `result` is
   // deliberately NOT reset here: submitAnswer() advances session.index for
@@ -65,12 +91,50 @@ export function LessonScreen({ lessonId, locale = 'hi' }: LessonScreenProps) {
   function check(): void {
     // A tap on Check before an answer exists is a mis-tap, not a wrong
     // answer. Grading an empty choice would cost a heart for it.
-    if (exercise === null || !hasAnswer) return;
+    if (session === null || progress === null || exercise === null || !hasAnswer) return;
     const answer: Answer =
       exercise.type === 'akshara-build' ? { kind: 'akshara', akshara } : draft!;
     const next = submitAnswer(session, answer, ctx);
     setSession(next.state);
     setResult(next.result);
+
+    // Only a real change needs writing back. Regen-only growth (hearts.ts's
+    // currentHearts) is always re-derivable from the original stored
+    // snapshot plus elapsed time, so it's never worth a write; a loss is not
+    // derivable from anything and must be persisted before the app can be
+    // killed out from under it. Same reasoning for the activity day: once
+    // today is recorded there's nothing new to write.
+    let nextProgress = progress;
+    if (next.state.hearts < session.hearts) {
+      nextProgress = { ...nextProgress, hearts: { count: next.state.hearts, updatedAt: Date.now() } };
+    }
+    if (!recordedActivity.current) {
+      recordedActivity.current = true;
+      const today = new Date().toISOString().slice(0, 10);
+      const activityDays = recordActivityDay(nextProgress.activityDays, today);
+      if (activityDays !== nextProgress.activityDays) {
+        nextProgress = { ...nextProgress, activityDays };
+      }
+    }
+    if (nextProgress !== progress) {
+      setProgress(nextProgress);
+      void saveProgress(nextProgress);
+    }
+  }
+
+  if (session === null) {
+    if (heartsWaitMs !== null) {
+      const minutes = Math.ceil(heartsWaitMs / 60_000);
+      return (
+        <View style={styles.screen}>
+          <Text style={styles.big}>{locale === 'hi' ? 'हृदयानि समाप्तानि' : 'Out of hearts'}</Text>
+          <Text testID="hearts-wait">
+            {locale === 'hi' ? `${minutes} मिनटों में अगला हृदय` : `Next heart in ${minutes} min`}
+          </Text>
+        </View>
+      );
+    }
+    return <View style={styles.screen} />;
   }
 
   if (exercise === null || session.status !== 'in_progress') {

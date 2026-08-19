@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { streakLength } from './streak';
+import { streakLength, recordActivityDay } from './streak';
 
 const DAY_MS = 86_400_000;
 
@@ -79,5 +79,30 @@ describe('streakLength', () => {
 
   it('names the offending value in the error', () => {
     expect(() => streakLength(['2026-08-32'], '2026-09-01')).toThrow(/2026-08-32/);
+  });
+});
+
+describe('recordActivityDay', () => {
+  it('appends a new day', () => {
+    expect(recordActivityDay(['2026-08-15'], '2026-08-16')).toEqual(['2026-08-15', '2026-08-16']);
+  });
+
+  it('starts a list from empty', () => {
+    expect(recordActivityDay([], '2026-08-16')).toEqual(['2026-08-16']);
+  });
+
+  // The caller uses reference equality to decide whether to persist —
+  // recording a day already present must be a no-op, not a same-value copy.
+  it('returns the same array reference when the day is already recorded', () => {
+    const days = ['2026-08-15', '2026-08-16'];
+    expect(recordActivityDay(days, '2026-08-16')).toBe(days);
+  });
+
+  it('throws for a malformed day', () => {
+    expect(() => recordActivityDay([], 'nonsense')).toThrow();
+  });
+
+  it('names the offending value in the error', () => {
+    expect(() => recordActivityDay([], '2026-08-32')).toThrow(/2026-08-32/);
   });
 });

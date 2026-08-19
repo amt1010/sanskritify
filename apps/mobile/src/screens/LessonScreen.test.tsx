@@ -1,5 +1,7 @@
 import { render, fireEvent, type RenderResult } from '@testing-library/react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LessonScreen } from './LessonScreen';
+import { loadProgress, saveProgress } from '../storage/progressStore';
 
 // @testing-library/react-native v14 made `render` and `fireEvent.*` async
 // (they now await React's `act()` internally, the same thing Task 15 found
@@ -13,6 +15,12 @@ async function playSelect(getByTestId: RenderResult['getByTestId'], option: stri
   await fireEvent.press(getByTestId(`opt-${option}`));
   await fireEvent.press(getByTestId('check'));
 }
+
+// The mocked AsyncStorage is a real in-memory store shared across tests in
+// this file, now that LessonScreen reads and writes progress through it.
+beforeEach(async () => {
+  await AsyncStorage.clear();
+});
 
 describe('LessonScreen', () => {
   it('shows five hearts at the start', async () => {
@@ -130,5 +138,37 @@ describe('LessonScreen', () => {
     // this test: `.join('')` throws "children.join is not a function".
     expect(getByTestId('xp').props.children).toContain('15');
     expect(getByText('साधु!')).toBeTruthy();
+  });
+
+  it('shows an out-of-hearts screen and does not start a session when hearts are exhausted', async () => {
+    await saveProgress({ hearts: { count: 0, updatedAt: Date.now() }, activityDays: [] });
+    const { getByTestId, queryByTestId } = await render(<LessonScreen lessonId="les.ch01.u1.l1" />);
+    expect(getByTestId('hearts-wait')).toBeTruthy();
+    expect(queryByTestId('check')).toBeNull();
+  });
+
+  it('persists hearts to storage after a wrong answer', async () => {
+    const { getByTestId } = await render(<LessonScreen lessonId="les.ch01.u1.l1" />);
+    await playSelect(getByTestId, 'आ'); // wrong; target is अ
+    expect(getByTestId('hearts').props.children).toContain('4');
+    const stored = await loadProgress();
+    expect(stored.hearts.count).toBe(4);
+  });
+
+  it('records today as an activity day on the first answer', async () => {
+    const { getByTestId } = await render(<LessonScreen lessonId="les.ch01.u1.l1" />);
+    await playSelect(getByTestId, 'अ');
+    const stored = await loadProgress();
+    const today = new Date().toISOString().slice(0, 10);
+    expect(stored.activityDays).toContain(today);
+  });
+
+  it('records the activity day only once per session', async () => {
+    const { getByTestId } = await render(<LessonScreen lessonId="les.ch01.u1.l1" />);
+    await playSelect(getByTestId, 'अ');
+    await playSelect(getByTestId, 'आ');
+    const stored = await loadProgress();
+    const today = new Date().toISOString().slice(0, 10);
+    expect(stored.activityDays.filter((d) => d === today)).toHaveLength(1);
   });
 });
